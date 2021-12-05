@@ -1,0 +1,140 @@
+###Mixing Noise at a specified milliseconds range to avoid dead stop
+start = 0
+noise_=[]
+for i in range(0,partition):
+    end = start + mask * (1+i)
+    start = end - mask * i
+    new_signal = end - 100
+    next_signal = end + 100
+    #print('{},{}'.format(new_signal,next_signal))
+    try:
+        mixing = noise_c[new_signal:end] * 0.1 + noise_c[end:next_signal] * 0.1
+    except ValueError:
+        break
+    print(f'{start},{new_signal}')
+    noise_.extend(list(noise_c[start:new_signal]))
+    print(f'{new_signal},{end}')
+    noise_.extend(list(mixing))
+    print(f'{next_signal},{next_signal + mask}')
+    noise_.extend(list(noise_c[next_signal:end + mask]))
+noise_=np.array(noise_)
+noise_=noise_/np.max(noise_)
+noise_[np.abs(noise_) > 0.1]= float(decimal.Decimal(random.randrange(0, 10))/100)
+
+
+#Getting the noise clip and Creating the folder for it
+
+def fNoiseClip(df,NOISE_DIR,noise_clip_lenth):
+    """
+    PARAMETERS
+    ----------
+    df: Dataframe object
+    NOISE_DIR: Path to Generate the Noise clip
+    noise_clip_length: Length of Noise Clip in Milliseconds
+    
+    RETURNS
+    --------
+    noise_clip_fn: Returns file name (np.ndarray)
+    
+    """
+    noise_clip_list=[]
+    for i,value in df.fn.iteritems():
+        fname=value.split('/')
+        fname=fname[1]
+        fname=NOISE_DIR + '/' + fname
+        sr,arr=wav.read(value)
+        arr_N=retNoiseClip(sr,arr,noise_clip_length)
+        noise_clip_list.append(fname)
+        wav.write(fname,sr,arr_N)
+        return np.array(noise_clip_list)
+        
+
+
+#Seperating the file into best,good, and bad clips
+best_clips=[]
+good_clips=[]
+bad_clips=[]
+
+for i,value in train.dB_SPL.iteritems():
+    if value < noise_threshold:
+        best_clips.append(train.fn.loc[i])
+    elif value > noise_threshold and value < 50:
+        good_clips.append(train.fn.loc[i])
+    else:
+        bad_clips.append(train.fn.loc[i])
+        
+# Generating the Amplitude of Each Noise Signal
+amp_signal_list=[]
+for i,value in train.Noise_clip_fn.iteritems():
+    sr,arr=wav.read(value)
+    arr_max=np.max(arr)
+    amp_signal_list.append(arr_max)
+train['amp_signal']=np.array(amp_signal_list)
+
+
+# Generating noise file
+import os
+
+NOISE_DIR='Noise_clip'
+noise_clip_length=500
+
+def
+if not os.path.exists(NOISE_DIR):
+    os.makedirs(NOISE_DIR)
+noise_clip_list=[]
+
+
+noise_clip_list=[]
+for i,value in train.fn.iteritems():
+    fname=value.split('/')
+    fname=fname[1]
+    fname=NOISE_DIR + '/' + fname
+    sr,arr=wav.read(value)
+    arr_N=retNoiseClip(sr,arr,noise_clip_length)
+    noise_clip_list.append(fname)
+    wav.write(fname,sr,arr_N)
+train['Noise_clip_fn']=np.array(noise_clip_list)  
+
+
+
+# Transform the Dataset
+
+from diorep.arrman import get_wav_transforms
+class TransformDataset(HyperParameters):
+    def __init__(self,signal_path,y,Clip_Group,dB_Audio,hpT,Train=True,bias=4,audibility_threshold=50):
+        """
+        PARAMETERS
+        ----------
+        signal_path: Path to the Audio signal
+        Clip_Group
+        dB_Audio
+        Train
+        bias: Bias parameter for the Noise Threshold
+        audibility_threshold: Threshold to determine mixing of Audio file
+        y: label
+        """
+        super().__init__(bias=bias,audibility_threshold=audibility_threshold)
+        self.signal_path=signal_path
+        self.transform=get_wav_transforms('Noise_Clip')
+        self.train=Train
+        self.dB_Audio=dB_Audio
+        self.Clip_Group=Clip_Group
+        self.hpT=hpT
+        self.y=y
+    def __len__(self):
+        return len(self.signal_path)
+    def __getitem__(self):
+        _,arr=wav.read(signal_path)
+        _,arr_N=wav.read(self.bkg_N)
+        y=padSample(arr)
+        if self.train is True and self.Clip_Group == 'best' and self.noise_threshold < self.audibility_threshold:
+            y=self.transform(arr,self.sr)
+            y=get_melspectr(arr,self.hpT)
+            y=random_power(mel,x=0.)
+            y=mono_to_color(y)
+        else:
+            y=get_melspectr(arr,self.hpT)
+            y=random_power(mel,x=0.)
+            y=mono_to_color(y) 
+        return y
+            
